@@ -1,18 +1,30 @@
-import { Event, EventDiscipline, EventRegistration, HeatAssignment, HeatOrGroup } from "@/types/domain";
+import { institutionService } from "@/features/institutions/services/institutionService";
+import { CompetitionEvent, CreateEventInput, CreateEventInvitationInput } from "@/types/events";
 
-import { createDocument, listDocuments, updateDocument } from "@/services/firebase/firestore";
+import { localEventRepository } from "./repositories/LocalEventRepository";
 
-export const createEvent = (event: Event) => createDocument("events", event);
-export const updateEvent = (id: string, data: Partial<Event>) => updateDocument<Event>("events", id, data);
-export const listEvents = () => listDocuments<Event>("events");
+const repository = localEventRepository;
 
-export const createEventDiscipline = (discipline: EventDiscipline) =>
-  createDocument("eventDisciplines", discipline);
-export const listEventDisciplines = () => listDocuments<EventDiscipline>("eventDisciplines");
+export const listEventsByInstitution = (institutionId: string): Promise<CompetitionEvent[]> => repository.getByInstitutionId(institutionId);
+export const getEventById = (eventId: string): Promise<CompetitionEvent | null> => repository.getById(eventId);
+export const createEvent = (institutionId: string, data: CreateEventInput): Promise<CompetitionEvent> => repository.create(institutionId, data);
+export const updateEvent = (eventId: string, data: Partial<CreateEventInput>): Promise<CompetitionEvent> => repository.update(eventId, data);
 
-export const createEventRegistration = (registration: EventRegistration) =>
-  createDocument("eventRegistrations", registration);
-export const listEventRegistrations = () => listDocuments<EventRegistration>("eventRegistrations");
+export const buildRegisteredInstitutionInvitation = async (institutionId: string): Promise<CreateEventInvitationInput | null> => {
+  const institution = await institutionService.getInstitutionById(institutionId);
 
-export const saveHeat = (heat: HeatOrGroup) => createDocument("heatsOrGroups", heat);
-export const saveAssignment = (assignment: HeatAssignment) => createDocument("heatAssignments", assignment);
+  if (!institution) {
+    return null;
+  }
+
+  return {
+    recipientType: "registered_institution",
+    institutionId: institution.id,
+    institutionName: institution.name,
+  };
+};
+
+export const buildEmailInvitation = (email: string): CreateEventInvitationInput => ({
+  recipientType: "email",
+  email,
+});

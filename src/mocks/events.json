@@ -1,0 +1,50 @@
+[
+  {
+    "id": "event-oceanic-series",
+    "institutionId": "inst-oceanic-track",
+    "name": "Oceanic Athletics Series",
+    "venue": "Estadio Modelo",
+    "startDate": "2026-06-12",
+    "startTime": "08:00",
+    "durationDays": 2,
+    "description": "Regional youth athletics competition.",
+    "status": "published",
+    "categories": [
+      {
+        "id": "cat-series-u12",
+        "name": "Under 12",
+        "minAge": 10,
+        "maxAge": 12,
+        "disciplines": ["60m", "Long Jump", "600m"]
+      },
+      {
+        "id": "cat-series-u14",
+        "name": "Under 14",
+        "minAge": 13,
+        "maxAge": 14,
+        "disciplines": ["80m", "High Jump", "1000m"]
+      }
+    ],
+    "invitations": [
+      {
+        "id": "inv-series-northfield",
+        "eventId": "event-oceanic-series",
+        "recipientType": "registered_institution",
+        "institutionId": "inst-northfield-school",
+        "institutionName": "Northfield Sports School",
+        "status": "sent",
+        "sentAt": "2026-03-01T10:00:00.000Z"
+      },
+      {
+        "id": "inv-series-email",
+        "eventId": "event-oceanic-series",
+        "recipientType": "email",
+        "email": "newclub@example.com",
+        "status": "sent",
+        "sentAt": "2026-03-02T12:00:00.000Z"
+      }
+    ],
+    "createdAt": "2026-02-28T09:00:00.000Z",
+    "updatedAt": "2026-03-02T12:00:00.000Z"
+  }
+]

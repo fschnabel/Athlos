@@ -14,7 +14,11 @@
       "bundleIdentifier": "com.athlos.institution"
     },
     "android": {
-      "package": "com.athlos.institution"
+      "package": "com.athlos.institution",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -26,7 +30,14 @@
         {
           "root": "./src/app"
         }
-      ]
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Athlos to use the camera to scan athlete identification documents."
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
@@ -37,7 +48,13 @@
       "firebaseProjectId": "",
       "firebaseStorageBucket": "",
       "firebaseMessagingSenderId": "",
-      "firebaseAppId": ""
+      "firebaseAppId": "",
+      "router": {
+        "root": "./src/app"
+      },
+      "eas": {
+        "projectId": "b5117e57-18ba-430b-98e2-f8db46b4c1b6"
+      }
     }
   }
 }

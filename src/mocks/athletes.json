@@ -1,0 +1,54 @@
+[
+  {
+    "id": "ath-oceanic-1",
+    "institutionId": "inst-oceanic-track",
+    "firstName": "Mateo",
+    "lastName": "Vera",
+    "gender": "male",
+    "birthDate": "2013-07-18",
+    "categoryId": "cat-a",
+    "emergencyContactName": "Rosa Vera",
+    "emergencyContactPhone": "+593 99 111 0022",
+    "createdAt": "2026-02-01T10:00:00.000Z",
+    "updatedAt": "2026-02-01T10:00:00.000Z"
+  },
+  {
+    "id": "ath-oceanic-2",
+    "institutionId": "inst-oceanic-track",
+    "firstName": "Camila",
+    "lastName": "Mora",
+    "gender": "female",
+    "birthDate": "2014-01-05",
+    "categoryId": "cat-a",
+    "emergencyContactName": "Javier Mora",
+    "emergencyContactPhone": "+593 98 200 3344",
+    "createdAt": "2026-02-03T09:30:00.000Z",
+    "updatedAt": "2026-02-03T09:30:00.000Z"
+  },
+  {
+    "id": "ath-northfield-1",
+    "institutionId": "inst-northfield-school",
+    "firstName": "Sofia",
+    "lastName": "Paredes",
+    "gender": "female",
+    "birthDate": "2012-11-10",
+    "categoryId": "cat-a",
+    "emergencyContactName": "Marco Paredes",
+    "emergencyContactPhone": "+593 97 010 1111",
+    "createdAt": "2026-02-12T14:15:00.000Z",
+    "updatedAt": "2026-02-12T14:15:00.000Z"
+  },
+  {
+    "id": "ath-pacific-1",
+    "institutionId": "inst-pacific-runners-club",
+    "firstName": "Nicolas",
+    "lastName": "Zamora",
+    "gender": "male",
+    "birthDate": "2015-03-21",
+    "categoryId": "cat-b",
+    "emergencyContactName": "Diana Zamora",
+    "emergencyContactPhone": "+593 96 500 2002",
+    "createdAt": "2026-02-20T08:45:00.000Z",
+    "updatedAt": "2026-02-20T08:45:00.000Z"
+  }
+]

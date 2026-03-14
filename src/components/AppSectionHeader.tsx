@@ -15,7 +15,7 @@ export const AppSectionHeader = ({ title, subtitle }: AppSectionHeaderProps) => 
 );
 
 const styles = StyleSheet.create({
-  container: { gap: 4 },
-  title: { fontSize: 24, fontWeight: "700", color: colors.text },
+  container: { gap: 6 },
+  title: { fontSize: 28, fontWeight: "800", color: colors.text },
   subtitle: { color: colors.textMuted, lineHeight: 20, marginBottom: spacing.sm },
 });

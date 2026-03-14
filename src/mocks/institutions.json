@@ -1,0 +1,41 @@
+[
+  {
+    "id": "inst-oceanic-track",
+    "name": "Oceanic Track Academy",
+    "type": "academy",
+    "city": "Guayaquil",
+    "province": "Guayas",
+    "email": "hello@oceanictrack.ec",
+    "phone": "+593 98 111 2233",
+    "logoUrl": "",
+    "mainContactName": "Valeria Mendez",
+    "createdAt": "2026-01-10T14:30:00.000Z",
+    "updatedAt": "2026-01-10T14:30:00.000Z"
+  },
+  {
+    "id": "inst-northfield-school",
+    "name": "Northfield Sports School",
+    "type": "school",
+    "city": "Quito",
+    "province": "Pichincha",
+    "email": "athletics@northfield.edu",
+    "phone": "+593 99 555 0001",
+    "logoUrl": "",
+    "mainContactName": "Diego Salazar",
+    "createdAt": "2026-01-22T09:15:00.000Z",
+    "updatedAt": "2026-01-22T09:15:00.000Z"
+  },
+  {
+    "id": "inst-pacific-runners-club",
+    "name": "Pacific Runners Club",
+    "type": "club",
+    "city": "Manta",
+    "province": "Manabi",
+    "email": "team@pacificrunners.club",
+    "phone": "+593 96 404 6789",
+    "logoUrl": "",
+    "mainContactName": "Andrea Bravo",
+    "createdAt": "2026-02-05T18:20:00.000Z",
+    "updatedAt": "2026-02-05T18:20:00.000Z"
+  }
+]

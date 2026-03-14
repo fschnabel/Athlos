@@ -5,13 +5,16 @@ import { AppButton } from "@/components/AppButton";
 import { AppCard } from "@/components/AppCard";
 import { AppSectionHeader } from "@/components/AppSectionHeader";
 import { Screen } from "@/components/Screen";
-import { mockAthletes, mockCoaches, mockEvents, mockInstitution, mockInvitations } from "@/features/mockData";
+import { mockAthletes, mockCoaches, mockEvents, mockInvitations } from "@/features/mockData";
+import { useInstitutionStore } from "@/store/institution-store";
 
 export default function DashboardScreen() {
+  const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
+
   return (
     <Screen>
       <AppSectionHeader
-        title={mockInstitution.name}
+        title={activeInstitution?.name ?? "Athlos"}
         subtitle="Institution control center for events, invitations, registration, and competition-day operations."
       />
       <AppCard>
@@ -20,11 +23,11 @@ export default function DashboardScreen() {
         <Text>{mockAthletes.length} athletes in roster</Text>
         <Text>{mockCoaches.length} coaches registered</Text>
       </AppCard>
-      <Link href="/auth/login" asChild>
-        <AppButton label="Open authentication flow" />
-      </Link>
       <Link href="/institution/profile" asChild>
-        <AppButton label="Edit institution profile" variant="secondary" />
+        <AppButton label="View institution profile" />
+      </Link>
+      <Link href="/institutions/select" asChild>
+        <AppButton label="Switch institution" variant="secondary" />
       </Link>
     </Screen>
   );

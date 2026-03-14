@@ -1,37 +1,57 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Alert } from "react-native";
+import { Href, Redirect, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 
-import { AppButton } from "@/components/AppButton";
-import { AppCard } from "@/components/AppCard";
-import { AppSectionHeader } from "@/components/AppSectionHeader";
-import { AppTextField } from "@/components/AppTextField";
 import { Screen } from "@/components/Screen";
-import { EventFormValues, eventSchema } from "@/features/events/validation";
+import { EventBuilderForm } from "@/features/events/components/EventBuilderForm";
+import { createEvent } from "@/features/events/service";
+import { institutionService } from "@/features/institutions/services/institutionService";
+import { useInstitutionStore } from "@/store/institution-store";
+import { Institution } from "@/types/institutions";
+
+const detailRoute = "/events/detail" as Href;
 
 export default function CreateEventScreen() {
-  const { control, handleSubmit } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
-    defaultValues: {
-      name: "",
-      venue: "",
-      eventDate: "2026-05-20",
-      registrationDeadline: "2026-05-10",
-      description: "",
-    },
-  });
+  const router = useRouter();
+  const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadInstitutions = async () => {
+      if (!activeInstitution) {
+        return;
+      }
+
+      const allInstitutions = await institutionService.getInstitutions();
+      setInstitutions(allInstitutions.filter((institution) => institution.id !== activeInstitution.id));
+    };
+
+    void loadInstitutions();
+  }, [activeInstitution]);
+
+  if (!activeInstitution) {
+    return <Redirect href="/institutions/select" />;
+  }
+
+  const handleSubmit = async (payload: Parameters<typeof EventBuilderForm>[0]["onSubmit"] extends (arg: infer T) => Promise<void> ? T : never) => {
+    setSubmitting(true);
+
+    try {
+      const event = await createEvent(activeInstitution.id, {
+        ...payload.event,
+        categories: payload.categories,
+        invitations: payload.invitations,
+      });
+
+      router.replace({ pathname: detailRoute, params: { id: event.id } } as never);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Screen>
-      <AppSectionHeader title="Create Event" subtitle="Set the event schedule, venue, and registration deadline." />
-      <AppCard>
-        <AppTextField control={control} name="name" label="Event name" />
-        <AppTextField control={control} name="venue" label="Venue" />
-        <AppTextField control={control} name="eventDate" label="Event date" placeholder="YYYY-MM-DD" />
-        <AppTextField control={control} name="registrationDeadline" label="Registration deadline" placeholder="YYYY-MM-DD" />
-        <AppTextField control={control} name="description" label="Description" />
-        <AppButton label="Save event" onPress={handleSubmit((values) => Alert.alert("Event created", JSON.stringify(values, null, 2)))} />
-      </AppCard>
+      <EventBuilderForm institutions={institutions} onSubmit={handleSubmit} isSubmitting={submitting} />
     </Screen>
   );
 }
