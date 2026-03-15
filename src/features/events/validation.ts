@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const eventSchema = z.object({
   name: z.string().trim().min(2, "Event name is required."),
@@ -15,6 +15,7 @@ export const eventCategorySchema = z.object({
   name: z.string().trim().min(2, "Category name is required."),
   minAge: z.coerce.number().int().min(4, "Minimum age is required."),
   maxAge: z.coerce.number().int().min(4, "Maximum age is required."),
+  genders: z.array(z.enum(["male", "female", "mixed"])).min(1, "Select at least one gender."),
   disciplines: z.array(z.string()).min(1, "Select at least one discipline."),
 });
 

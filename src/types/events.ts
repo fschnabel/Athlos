@@ -1,5 +1,8 @@
-export type EventStatus = "draft" | "published";
+﻿export type EventStatus = "draft" | "published";
 export type InvitationRecipientType = "registered_institution" | "email";
+export type EventInvitationStatus = "sent" | "accepted" | "rejected";
+export type EventAthleteRegistrationStatus = "registered";
+export type EventCategoryGender = "male" | "female" | "mixed";
 
 export interface EventInvitation {
   id: string;
@@ -8,8 +11,9 @@ export interface EventInvitation {
   institutionId?: string;
   institutionName?: string;
   email?: string;
-  status: "sent";
+  status: EventInvitationStatus;
   sentAt: string;
+  respondedAt?: string;
 }
 
 export interface EventCategory {
@@ -17,7 +21,22 @@ export interface EventCategory {
   name: string;
   minAge: number;
   maxAge: number;
+  gender: EventCategoryGender;
   disciplines: string[];
+}
+
+export interface EventAthleteRegistration {
+  id: string;
+  eventId: string;
+  invitationId: string;
+  institutionId: string;
+  athleteId: string;
+  athleteName: string;
+  categoryId: string;
+  categoryName: string;
+  discipline: string;
+  status: EventAthleteRegistrationStatus;
+  createdAt: string;
 }
 
 export interface CompetitionEvent {
@@ -32,6 +51,7 @@ export interface CompetitionEvent {
   status: EventStatus;
   categories: EventCategory[];
   invitations: EventInvitation[];
+  registrations: EventAthleteRegistration[];
   createdAt: string;
   updatedAt: string;
 }
@@ -40,6 +60,7 @@ export interface CreateEventCategoryInput {
   name: string;
   minAge: number;
   maxAge: number;
+  gender: EventCategoryGender;
   disciplines: string[];
 }
 
@@ -59,4 +80,11 @@ export interface CreateEventInput {
   description?: string;
   categories: CreateEventCategoryInput[];
   invitations: CreateEventInvitationInput[];
+}
+
+export interface AcceptInvitationRegistrationInput {
+  athleteId: string;
+  athleteName?: string;
+  categoryId: string;
+  discipline: string;
 }

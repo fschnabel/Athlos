@@ -1,4 +1,4 @@
-import { Href, Redirect, useRouter } from "expo-router";
+﻿import { Href, Redirect, useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import { AppButton } from "@/components/AppButton";
@@ -7,6 +7,7 @@ import { AppSectionHeader } from "@/components/AppSectionHeader";
 import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { InstitutionCard } from "@/features/institutions/components/InstitutionCard";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 
 const selectRoute = "/institutions/select" as Href;
@@ -15,6 +16,7 @@ const editRoute = "/institutions/edit" as Href;
 
 export default function InstitutionDashboardScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
 
   if (!activeInstitution) {
@@ -24,21 +26,21 @@ export default function InstitutionDashboardScreen() {
   return (
     <Screen contentContainerStyle={styles.content}>
       <View style={styles.hero}>
-        <Text style={styles.kicker}>Active Institution</Text>
+        <Text style={styles.kicker}>{t("institutions.activeInstitution")}</Text>
         <AppSectionHeader
           title={activeInstitution.name}
-          subtitle={`${activeInstitution.city}, ${activeInstitution.province} � ${activeInstitution.type}`}
+          subtitle={`${activeInstitution.city}, ${activeInstitution.province} • ${t(`institutions.types.${activeInstitution.type}`)}`}
         />
       </View>
 
       <InstitutionCard institution={activeInstitution} />
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Quick actions</Text>
+        <Text style={styles.sectionTitle}>{t("institutions.dashboardActions")}</Text>
         <View style={styles.actions}>
-          <AppButton label="View Profile" onPress={() => router.push(profileRoute)} />
-          <AppButton label="Edit Institution" variant="secondary" onPress={() => router.push(editRoute)} />
-          <AppButton label="Switch Institution" variant="ghost" onPress={() => router.replace(selectRoute)} />
+          <AppButton label={t("institutions.viewProfile")} onPress={() => router.push(profileRoute)} />
+          <AppButton label={t("institutions.editInstitution")} variant="secondary" onPress={() => router.push(editRoute)} />
+          <AppButton label={t("institutions.switchInstitution")} variant="ghost" onPress={() => router.replace(selectRoute)} />
         </View>
       </AppCard>
     </Screen>

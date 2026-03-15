@@ -1,6 +1,6 @@
-import { mockCategories } from "@/features/mockData";
+﻿import { mockCategories } from "@/features/mockData";
 
-const getAgeFromBirthDate = (birthDate: string) => {
+export const getAgeFromBirthDate = (birthDate: string) => {
   const today = new Date();
   const birth = new Date(`${birthDate}T00:00:00`);
 

@@ -1,5 +1,5 @@
-import { CameraView, useCameraPermissions } from "expo-camera";
-import { NativeModulesProxy } from "expo-modules-core";
+﻿import { CameraView, useCameraPermissions } from "expo-camera";
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
@@ -8,19 +8,19 @@ import { AppButton } from "@/components/AppButton";
 import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { parseIdentificationScan } from "@/features/athletes/identificationParser";
+import { useI18n } from "@/i18n";
 
 type TextExtractorModule = {
   isSupported: boolean;
   extractTextFromImage: (uri: string) => Promise<string[]>;
 };
 
-const getTextExtractor = (): TextExtractorModule | null => {
-  const moduleRef = NativeModulesProxy.ExpoTextExtractor as TextExtractorModule | undefined;
-  return moduleRef ?? null;
-};
+const getTextExtractor = (): TextExtractorModule | null =>
+  requireOptionalNativeModule<TextExtractorModule>("ExpoTextExtractor");
 
 export default function AthleteScanIdScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const params = useLocalSearchParams<{ returnTo?: string; id?: string }>();
   const cameraRef = useRef<CameraView | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -31,11 +31,11 @@ export default function AthleteScanIdScreen() {
 
     if (!parsed.firstName && !parsed.lastName && !parsed.birthDate && !parsed.gender) {
       Alert.alert(
-        "OCR completed",
-        "We captured the document, but could not identify enough athlete data automatically. You can try again or complete the form manually.",
+        t("athletes.scan.completedTitle"),
+        t("athletes.scan.completedMessage"),
         [
-          { text: "Try again", onPress: () => setIsProcessing(false) },
-          { text: "Back", onPress: () => router.back() },
+          { text: t("common.tryAgain"), onPress: () => setIsProcessing(false) },
+          { text: t("common.back"), onPress: () => router.back() },
         ],
       );
       return;
@@ -61,15 +61,12 @@ export default function AthleteScanIdScreen() {
     const textExtractor = getTextExtractor();
 
     if (!textExtractor) {
-      Alert.alert(
-        "OCR unavailable in Expo Go",
-        "This OCR feature needs a development build because the native text extractor module is not present in Expo Go.",
-      );
+      Alert.alert(t("athletes.scan.unavailableTitle"), t("athletes.scan.unavailableMessage"));
       return;
     }
 
     if (!textExtractor.isSupported) {
-      Alert.alert("OCR unavailable", "Text recognition is not supported on this device.");
+      Alert.alert(t("athletes.scan.unavailableTitle"), t("athletes.scan.unsupportedMessage"));
       return;
     }
 
@@ -86,23 +83,23 @@ export default function AthleteScanIdScreen() {
       const rawText = detectedLines.join("\n");
 
       Alert.alert(
-        "Identification captured",
-        "We extracted text from the document and will prefill the athlete form so you can review it.",
+        t("athletes.scan.capturedTitle"),
+        t("athletes.scan.capturedMessage"),
         [
-          { text: "Retake", onPress: () => setIsProcessing(false) },
-          { text: "Use data", onPress: () => handleContinue(rawText) },
+          { text: t("common.tryAgain"), onPress: () => setIsProcessing(false) },
+          { text: t("common.useData"), onPress: () => handleContinue(rawText) },
         ],
       );
     } catch {
       setIsProcessing(false);
-      Alert.alert("Capture failed", "We could not read text from the identification. Please try again with better lighting and framing.");
+      Alert.alert(t("athletes.scan.failedTitle"), t("athletes.scan.failedMessage"));
     }
   };
 
   if (!permission) {
     return (
       <Screen contentContainerStyle={styles.centered}>
-        <Text style={styles.title}>Preparing camera</Text>
+        <Text style={styles.title}>{t("athletes.scan.preparing")}</Text>
       </Screen>
     );
   }
@@ -111,10 +108,10 @@ export default function AthleteScanIdScreen() {
     return (
       <Screen contentContainerStyle={styles.permissionLayout}>
         <View style={styles.permissionCard}>
-          <Text style={styles.title}>Camera permission required</Text>
-          <Text style={styles.subtitle}>Allow camera access to photograph the identification and run OCR over the document text.</Text>
-          <AppButton label="Allow camera" onPress={() => void requestPermission()} />
-          <AppButton label="Back" variant="ghost" onPress={() => router.back()} />
+          <Text style={styles.title}>{t("athletes.scan.permissionTitle")}</Text>
+          <Text style={styles.subtitle}>{t("athletes.scan.permissionSubtitle")}</Text>
+          <AppButton label={t("athletes.scan.allow")} onPress={() => void requestPermission()} />
+          <AppButton label={t("common.back")} variant="ghost" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -125,13 +122,17 @@ export default function AthleteScanIdScreen() {
       <CameraView ref={cameraRef} style={StyleSheet.absoluteFillObject} facing="back" />
       <View style={styles.overlay}>
         <View style={styles.headerBlock}>
-          <Text style={styles.overlayTitle}>OCR identification</Text>
-          <Text style={styles.overlayText}>Center the full document inside the frame, then take the photo so we can read the text.</Text>
+          <Text style={styles.overlayTitle}>{t("athletes.scan.title")}</Text>
+          <Text style={styles.overlayText}>{t("athletes.scan.subtitle")}</Text>
         </View>
         <View style={styles.frame} />
         <View style={styles.actions}>
-          <AppButton label={isProcessing ? "Processing..." : "Capture document"} onPress={() => void handleCapture()} loading={isProcessing} />
-          <AppButton label="Cancel" variant="ghost" onPress={() => router.back()} disabled={isProcessing} />
+          <AppButton
+            label={isProcessing ? t("common.processing") : t("athletes.scan.capture")}
+            onPress={() => void handleCapture()}
+            loading={isProcessing}
+          />
+          <AppButton label={t("common.cancel")} variant="ghost" onPress={() => router.back()} disabled={isProcessing} />
         </View>
       </View>
     </View>

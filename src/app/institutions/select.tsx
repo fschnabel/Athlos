@@ -4,11 +4,13 @@ import { StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AppButton } from "@/components/AppButton";
 import { AppSectionHeader } from "@/components/AppSectionHeader";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { InstitutionCard } from "@/features/institutions/components/InstitutionCard";
 import { StatePanel } from "@/features/institutions/components/StatePanel";
 import { institutionService } from "@/features/institutions/services/institutionService";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 import { Institution } from "@/types/institutions";
 
@@ -18,6 +20,7 @@ const appHomeRoute = "/(tabs)/dashboard" as Href;
 export default function SelectInstitutionScreen() {
   const router = useRouter();
   const setActiveInstitution = useInstitutionStore((state) => state.setActiveInstitution);
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,36 +62,27 @@ export default function SelectInstitutionScreen() {
     <Screen contentContainerStyle={styles.screenContent} scrollable={!loading && !error && institutions.length > 0}>
       <View style={styles.hero}>
         <Text style={styles.kicker}>Athlos MVP</Text>
-        <AppSectionHeader
-          title="Select Institution"
-          subtitle="Choose the organization you want to manage today. You can switch later at any time."
-        />
+        <AppSectionHeader title={t("institutions.selectTitle")} subtitle={t("institutions.selectSubtitle")} />
+        <LanguageSwitcher />
       </View>
 
       <View style={styles.searchBlock}>
-        <Text style={styles.searchLabel}>Search by institution name</Text>
+        <Text style={styles.searchLabel}>{t("institutions.searchLabel")}</Text>
         <TextInput
           value={searchQuery}
           onChangeText={(value) => void handleSearch(value)}
-          placeholder="Search institutions"
+          placeholder={t("institutions.searchPlaceholder")}
           placeholderTextColor={colors.textMuted}
           style={styles.searchInput}
           autoCorrect={false}
         />
       </View>
 
-      <AppButton label="Create Institution" onPress={() => router.push(createRoute)} />
+      <AppButton label={t("institutions.createButton")} onPress={() => router.push(createRoute)} />
 
-      {loading ? <StatePanel title="Loading institutions" message="Preparing the local institution directory." loading /> : null}
-
-      {!loading && error ? <StatePanel title="Something went wrong" message={error} /> : null}
-
-      {!loading && !error && institutions.length === 0 ? (
-        <StatePanel
-          title="No institutions found"
-          message={searchQuery ? "Try a different search or create a new institution." : "Create the first institution to start managing your meet operations."}
-        />
-      ) : null}
+      {loading ? <StatePanel title={t("institutions.loadingTitle")} message={t("institutions.loadingMessage")} loading /> : null}
+      {!loading && error ? <StatePanel title="Error" message={error} /> : null}
+      {!loading && !error && institutions.length === 0 ? <StatePanel title={t("institutions.emptyTitle")} message={t("institutions.emptyMessage")} /> : null}
 
       {!loading && !error && institutions.length > 0 ? (
         <View style={styles.list}>
@@ -102,29 +96,11 @@ export default function SelectInstitutionScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenContent: {
-    gap: spacing.lg,
-  },
-  hero: {
-    gap: spacing.sm,
-    padding: spacing.lg,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-  },
-  kicker: {
-    color: colors.accent,
-    fontSize: 13,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 1.1,
-  },
-  searchBlock: {
-    gap: 8,
-  },
-  searchLabel: {
-    color: colors.text,
-    fontWeight: "700",
-  },
+  screenContent: { gap: spacing.lg },
+  hero: { gap: spacing.sm, padding: spacing.lg, borderRadius: 28, backgroundColor: colors.primary },
+  kicker: { color: colors.accent, fontSize: 13, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1.1 },
+  searchBlock: { gap: 8 },
+  searchLabel: { color: colors.text, fontWeight: "700" },
   searchInput: {
     minHeight: 50,
     borderRadius: 16,
@@ -134,7 +110,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: spacing.md,
   },
-  list: {
-    gap: spacing.md,
-  },
+  list: { gap: spacing.md },
 });

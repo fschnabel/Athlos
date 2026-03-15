@@ -1,18 +1,17 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+﻿import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AppCard } from "@/components/AppCard";
 import { colors, spacing } from "@/constants/theme";
-import { Institution, institutionTypeOptions } from "@/types/institutions";
+import { useI18n } from "@/i18n";
+import { Institution } from "@/types/institutions";
 
 interface InstitutionCardProps {
   institution: Institution;
   onPress?: () => void;
 }
 
-const getInstitutionTypeLabel = (type: Institution["type"]) =>
-  institutionTypeOptions.find((option) => option.value === type)?.label ?? type;
-
 export const InstitutionCard = ({ institution, onPress }: InstitutionCardProps) => {
+  const { t } = useI18n();
   const initials = institution.name
     .split(" ")
     .slice(0, 2)
@@ -30,13 +29,13 @@ export const InstitutionCard = ({ institution, onPress }: InstitutionCardProps) 
             <View style={styles.titleRow}>
               <Text style={styles.name}>{institution.name}</Text>
               <View style={styles.typePill}>
-                <Text style={styles.typePillText}>{getInstitutionTypeLabel(institution.type)}</Text>
+                <Text style={styles.typePillText}>{t(`institutions.types.${institution.type}`)}</Text>
               </View>
             </View>
             <Text style={styles.location}>
               {institution.city}, {institution.province}
             </Text>
-            <Text style={styles.contact}>Main contact: {institution.mainContactName}</Text>
+            <Text style={styles.contact}>{t("institutions.details.mainContact")}: {institution.mainContactName}</Text>
           </View>
         </View>
       </AppCard>

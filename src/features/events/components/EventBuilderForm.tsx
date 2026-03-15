@@ -1,4 +1,4 @@
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+﻿import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -18,7 +18,8 @@ import {
   InvitationEmailFormValues,
   invitationEmailSchema,
 } from "@/features/events/validation";
-import { CreateEventCategoryInput, CreateEventInvitationInput } from "@/types/events";
+import { useI18n } from "@/i18n";
+import { CreateEventCategoryInput, CreateEventInvitationInput, EventCategoryGender } from "@/types/events";
 import { Institution } from "@/types/institutions";
 
 interface EventBuilderFormProps {
@@ -32,6 +33,7 @@ interface EventBuilderFormProps {
 }
 
 const DISCIPLINE_OPTIONS = DEFAULT_DISCIPLINES.map((discipline) => discipline.name);
+const GENDER_OPTIONS: EventCategoryGender[] = ["male", "female", "mixed"];
 
 const parseDateString = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
@@ -58,10 +60,46 @@ const formatTime = (value: Date) => {
   return `${hours}:${minutes}`;
 };
 
-const formatDisplayDate = (value: string) => parseDateString(value).toLocaleDateString();
-const formatDisplayTime = (value: string) => formatTime(parseTimeString(value));
+const normalizeGenders = (current: EventCategoryGender[], next: EventCategoryGender): EventCategoryGender[] => {
+  if (next === "mixed") {
+    return current.includes("mixed") ? [] : ["mixed"];
+  }
+
+  const withoutMixed = current.filter((item) => item !== "mixed");
+  if (withoutMixed.includes(next)) {
+    return withoutMixed.filter((item) => item !== next);
+  }
+
+  return [...withoutMixed, next];
+};
+
+const expandCategoriesByGender = (
+  values: EventCategoryFormValues,
+  getGenderLabel: (gender: Exclude<EventCategoryGender, 'mixed'>) => string,
+): CreateEventCategoryInput[] => {
+  if (values.genders.includes("mixed")) {
+    return [
+      {
+        name: values.name,
+        minAge: values.minAge,
+        maxAge: values.maxAge,
+        gender: "mixed",
+        disciplines: values.disciplines,
+      },
+    ];
+  }
+
+  return values.genders.map((gender) => ({
+    name: values.genders.length > 1 ? `${values.name} - ${getGenderLabel(gender as Exclude<EventCategoryGender, "mixed">)}` : values.name,
+    minAge: values.minAge,
+    maxAge: values.maxAge,
+    gender,
+    disciplines: values.disciplines,
+  }));
+};
 
 export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false }: EventBuilderFormProps) => {
+  const { t, formatDate: formatLocalizedDate } = useI18n();
   const eventForm = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -80,6 +118,7 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
       name: "",
       minAge: 10,
       maxAge: 12,
+      genders: ["mixed"],
       disciplines: [],
     },
   });
@@ -98,6 +137,7 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
   const startDate = eventForm.watch("startDate");
   const startTime = eventForm.watch("startTime");
   const selectedDisciplines = categoryForm.watch("disciplines");
+  const selectedGenders = categoryForm.watch("genders") as EventCategoryGender[];
 
   const toggleDiscipline = (disciplineName: string) => {
     const current = categoryForm.getValues("disciplines");
@@ -106,6 +146,12 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
       : [...current, disciplineName];
 
     categoryForm.setValue("disciplines", next, { shouldValidate: true });
+  };
+
+  const toggleGender = (gender: EventCategoryGender) => {
+    const current = categoryForm.getValues("genders") as EventCategoryGender[];
+    const next = normalizeGenders(current, gender);
+    categoryForm.setValue("genders", next, { shouldValidate: true });
   };
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -129,15 +175,9 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
   };
 
   const handleAddCategory = categoryForm.handleSubmit((values) => {
-    const nextCategory: CreateEventCategoryInput = {
-      name: values.name,
-      minAge: values.minAge,
-      maxAge: values.maxAge,
-      disciplines: values.disciplines,
-    };
-
-    setCategories((current) => [...current, nextCategory]);
-    categoryForm.reset({ name: "", minAge: 10, maxAge: 12, disciplines: [] });
+    const nextCategories = expandCategoriesByGender(values, (gender) => t(`events.genders.${gender}`));
+    setCategories((current) => [...current, ...nextCategories]);
+    categoryForm.reset({ name: "", minAge: 10, maxAge: 12, genders: ["mixed"], disciplines: [] });
   });
 
   const handleAddInstitutionInvitation = (institution: Institution) => {
@@ -173,7 +213,7 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
 
   const handleSave = eventForm.handleSubmit(async (values) => {
     if (categories.length === 0) {
-      categoryForm.setError("name", { message: "Add at least one category before saving the event." });
+      categoryForm.setError("name", { message: t("events.addCategory") });
       return;
     }
 
@@ -182,84 +222,96 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
 
   return (
     <View style={styles.container}>
-      <AppSectionHeader
-        title="Create Event"
-        subtitle="Define schedule, duration, categories, disciplines, and invitations for the competition."
-      />
+      <AppSectionHeader title={t("events.createTitle")} subtitle={t("events.createSubtitle")} />
 
       <AppCard>
-        <AppTextField control={eventForm.control} name="name" label="Event name" placeholder="Guayaquil Athletics Cup" />
-        <AppTextField control={eventForm.control} name="venue" label="Venue" placeholder="Olympic Stadium" />
+        <AppTextField control={eventForm.control} name="name" label={t("events.fields.name")} placeholder="Guayaquil Athletics Cup" />
+        <AppTextField control={eventForm.control} name="venue" label={t("events.fields.venue")} placeholder="Olympic Stadium" />
 
         <View style={styles.field}>
-          <Text style={styles.label}>Start date</Text>
+          <Text style={styles.label}>{t("events.fields.startDate")}</Text>
           <Pressable onPress={() => setShowDatePicker(true)} style={styles.pickerButton}>
-            <Text style={styles.pickerValue}>{formatDisplayDate(startDate)}</Text>
-            <Text style={styles.pickerHint}>Tap to choose date</Text>
+            <Text style={styles.pickerValue}>{formatLocalizedDate(parseDateString(startDate))}</Text>
+            <Text style={styles.pickerHint}>{t("events.pickDate")}</Text>
           </Pressable>
           {eventForm.formState.errors.startDate ? <Text style={styles.error}>{eventForm.formState.errors.startDate.message}</Text> : null}
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Start time</Text>
+          <Text style={styles.label}>{t("events.fields.startTime")}</Text>
           <Pressable onPress={() => setShowTimePicker(true)} style={styles.pickerButton}>
-            <Text style={styles.pickerValue}>{formatDisplayTime(startTime)}</Text>
-            <Text style={styles.pickerHint}>Tap to choose time</Text>
+            <Text style={styles.pickerValue}>{formatTime(parseTimeString(startTime))}</Text>
+            <Text style={styles.pickerHint}>{t("events.pickTime")}</Text>
           </Pressable>
           {eventForm.formState.errors.startTime ? <Text style={styles.error}>{eventForm.formState.errors.startTime.message}</Text> : null}
         </View>
 
-        {showDatePicker ? (
-          <DateTimePicker value={parseDateString(startDate)} mode="date" display="default" onChange={handleDateChange} />
-        ) : null}
+        {showDatePicker ? <DateTimePicker value={parseDateString(startDate)} mode="date" display="default" onChange={handleDateChange} /> : null}
+        {showTimePicker ? <DateTimePicker value={parseTimeString(startTime)} mode="time" display="default" onChange={handleTimeChange} /> : null}
 
-        {showTimePicker ? (
-          <DateTimePicker value={parseTimeString(startTime)} mode="time" display="default" onChange={handleTimeChange} />
-        ) : null}
-
-        <AppTextField control={eventForm.control} name="durationDays" label="Duration in days" placeholder="2" keyboardType="number-pad" autoCapitalize="none" />
-        <AppTextField control={eventForm.control} name="description" label="Description" placeholder="Competition summary" />
+        <AppTextField control={eventForm.control} name="durationDays" label={t("events.fields.durationDays")} placeholder="2" keyboardType="number-pad" autoCapitalize="none" />
+        <AppTextField control={eventForm.control} name="description" label={t("events.fields.description")} placeholder="Competition summary" />
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Categories and ages</Text>
-        <AppTextField control={categoryForm.control} name="name" label="Category name" placeholder="Under 12" />
-        <AppTextField control={categoryForm.control} name="minAge" label="Minimum age" placeholder="10" keyboardType="number-pad" autoCapitalize="none" />
-        <AppTextField control={categoryForm.control} name="maxAge" label="Maximum age" placeholder="12" keyboardType="number-pad" autoCapitalize="none" />
+        <Text style={styles.sectionTitle}>{t("events.categoriesTitle")}</Text>
+        <AppTextField control={categoryForm.control} name="name" label={t("events.categoryName")} placeholder="Under 12" />
+        <AppTextField control={categoryForm.control} name="minAge" label={t("events.minAge")} placeholder="10" keyboardType="number-pad" autoCapitalize="none" />
+        <AppTextField control={categoryForm.control} name="maxAge" label={t("events.maxAge")} placeholder="12" keyboardType="number-pad" autoCapitalize="none" />
 
         <View style={styles.field}>
-          <Text style={styles.label}>Disciplines</Text>
+          <Text style={styles.label}>{t("events.genderLabel")}</Text>
+          <View style={styles.genderRow}>
+            {GENDER_OPTIONS.map((gender) => {
+              const checked = selectedGenders.includes(gender);
+              return (
+                <Pressable
+                  key={gender}
+                  onPress={() => toggleGender(gender)}
+                  style={[styles.genderChip, checked && styles.genderChipSelected]}
+                >
+                  <Text style={[styles.genderChipText, checked && styles.genderChipTextSelected]}>{t(`events.genders.${gender}`)}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          {categoryForm.formState.errors.genders ? <Text style={styles.error}>{categoryForm.formState.errors.genders.message}</Text> : null}
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>{t("events.disciplines")}</Text>
           <Pressable onPress={() => setShowDisciplineModal(true)} style={styles.pickerButton}>
             <Text style={styles.pickerValue}>
-              {selectedDisciplines.length > 0 ? `${selectedDisciplines.length} selected` : "Select disciplines"}
+              {selectedDisciplines.length > 0 ? `${selectedDisciplines.length} ${t("common.selected")}` : t("events.selectDisciplines")}
             </Text>
             <Text style={styles.pickerHint}>
-              {selectedDisciplines.length > 0 ? selectedDisciplines.join(", ") : "Open modal to choose disciplines with checks"}
+              {selectedDisciplines.length > 0 ? selectedDisciplines.join(", ") : t("events.modalSubtitle")}
             </Text>
           </Pressable>
           {categoryForm.formState.errors.disciplines ? <Text style={styles.error}>{categoryForm.formState.errors.disciplines.message}</Text> : null}
         </View>
 
-        <AppButton label="Add category" variant="secondary" onPress={() => void handleAddCategory()} />
+        <AppButton label={t("events.addCategory")} variant="secondary" onPress={() => void handleAddCategory()} />
 
         {categories.length > 0 ? (
           <View style={styles.stack}>
             {categories.map((category, index) => (
-              <View key={`${category.name}-${index}`} style={styles.itemCard}>
+              <View key={`${category.name}-${category.gender}-${index}`} style={styles.itemCard}>
                 <Text style={styles.itemTitle}>{category.name}</Text>
-                <Text style={styles.itemMeta}>Ages {category.minAge} to {category.maxAge}</Text>
+                <Text style={styles.itemMeta}>{t("events.agesRange", { min: category.minAge, max: category.maxAge })}</Text>
+                <Text style={styles.itemMeta}>{t(`events.genders.${category.gender}`)}</Text>
                 <Text style={styles.itemMeta}>{category.disciplines.join(", ")}</Text>
-                <AppButton label="Remove" variant="ghost" onPress={() => removeCategory(index)} />
+                <AppButton label={t("common.remove")} variant="ghost" onPress={() => removeCategory(index)} />
               </View>
             ))}
           </View>
         ) : (
-          <Text style={styles.emptyText}>Add at least one category with its age range and disciplines.</Text>
+          <Text style={styles.emptyText}>{t("events.noEventsMessage")}</Text>
         )}
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Invite registered institutions</Text>
+        <Text style={styles.sectionTitle}>{t("events.inviteInstitutions")}</Text>
         <View style={styles.chipWrap}>
           {institutions.map((institution) => {
             const isSelected = invitations.some(
@@ -274,7 +326,7 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
                 disabled={isSelected}
               >
                 <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                  {isSelected ? `? ${institution.name}` : institution.name}
+                  {isSelected ? `[x] ${institution.name}` : institution.name}
                 </Text>
               </Pressable>
             );
@@ -283,32 +335,32 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Invite by email</Text>
-        <AppTextField control={emailForm.control} name="email" label="Institution email" placeholder="sports@institution.org" autoCapitalize="none" keyboardType="email-address" />
-        <AppButton label="Add email invitation" variant="secondary" onPress={() => void handleAddEmailInvitation()} />
+        <Text style={styles.sectionTitle}>{t("events.inviteEmail")}</Text>
+        <AppTextField control={emailForm.control} name="email" label={t("invitations.institutionEmail")} placeholder="sports@institution.org" autoCapitalize="none" keyboardType="email-address" />
+        <AppButton label={t("events.addEmailInvitation")} variant="secondary" onPress={() => void handleAddEmailInvitation()} />
 
         {invitations.length > 0 ? (
           <View style={styles.stack}>
             {invitations.map((invitation, index) => (
               <View key={`${invitation.recipientType}-${invitation.institutionId ?? invitation.email ?? index}`} style={styles.itemCard}>
                 <Text style={styles.itemTitle}>{invitation.institutionName ?? invitation.email}</Text>
-                <Text style={styles.itemMeta}>{invitation.recipientType === "registered_institution" ? "Registered institution" : "Email invitation"}</Text>
-                <AppButton label="Remove" variant="ghost" onPress={() => removeInvitation(index)} />
+                <Text style={styles.itemMeta}>{invitation.recipientType === "registered_institution" ? t("invitations.registeredInstitution") : t("invitations.emailInvitation")}</Text>
+                <AppButton label={t("common.remove")} variant="ghost" onPress={() => removeInvitation(index)} />
               </View>
             ))}
           </View>
         ) : (
-          <Text style={styles.emptyText}>No invitations added yet.</Text>
+          <Text style={styles.emptyText}>{t("invitations.noInvitationsYet")}</Text>
         )}
       </AppCard>
 
-      <AppButton label="Save event" onPress={() => void handleSave()} loading={isSubmitting} />
+      <AppButton label={t("events.saveEvent")} onPress={() => void handleSave()} loading={isSubmitting} />
 
       <Modal visible={showDisciplineModal} animationType="slide" transparent onRequestClose={() => setShowDisciplineModal(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Select disciplines</Text>
-            <Text style={styles.modalSubtitle}>Choose the disciplines that belong to this category.</Text>
+            <Text style={styles.modalTitle}>{t("events.modalTitle")}</Text>
+            <Text style={styles.modalSubtitle}>{t("events.modalSubtitle")}</Text>
             <ScrollView contentContainerStyle={styles.modalList}>
               {DISCIPLINE_OPTIONS.map((disciplineName) => {
                 const selected = selectedDisciplines.includes(disciplineName);
@@ -316,14 +368,14 @@ export const EventBuilderForm = ({ institutions, onSubmit, isSubmitting = false 
                 return (
                   <Pressable key={disciplineName} onPress={() => toggleDiscipline(disciplineName)} style={[styles.disciplineRow, selected && styles.disciplineRowSelected]}>
                     <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-                      {selected ? <Text style={styles.checkboxMark}>?</Text> : null}
+                      {selected ? <Text style={styles.checkboxMark}>X</Text> : null}
                     </View>
                     <Text style={[styles.disciplineText, selected && styles.disciplineTextSelected]}>{disciplineName}</Text>
                   </Pressable>
                 );
               })}
             </ScrollView>
-            <AppButton label="Done" onPress={() => setShowDisciplineModal(false)} />
+            <AppButton label={t("common.done")} onPress={() => setShowDisciplineModal(false)} />
           </View>
         </View>
       </Modal>
@@ -335,6 +387,21 @@ const styles = StyleSheet.create({
   container: { gap: spacing.md },
   field: { gap: 8 },
   label: { color: colors.text, fontWeight: "600" },
+  genderRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  genderChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+  },
+  genderChipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  genderChipText: { color: colors.text, fontWeight: "600" },
+  genderChipTextSelected: { color: colors.white },
   pickerButton: {
     borderRadius: 16,
     borderWidth: 1,
@@ -432,3 +499,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
 });
+
+
+
+

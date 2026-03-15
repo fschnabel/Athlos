@@ -1,10 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Href, Redirect, useRouter } from "expo-router";
 
 import { Screen } from "@/components/Screen";
 import { InstitutionForm } from "@/features/institutions/components/InstitutionForm";
 import { InstitutionFormValues } from "@/features/institutions/schemas/institutionSchema";
 import { institutionService } from "@/features/institutions/services/institutionService";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 
 const selectRoute = "/institutions/select" as Href;
@@ -12,6 +13,7 @@ const profileRoute = "/institutions/profile" as Href;
 
 export default function EditInstitutionScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
   const setActiveInstitution = useInstitutionStore((state) => state.setActiveInstitution);
   const [submitting, setSubmitting] = useState(false);
@@ -46,9 +48,9 @@ export default function EditInstitutionScreen() {
   return (
     <Screen>
       <InstitutionForm
-        title="Edit Institution"
-        subtitle="Update the profile that will be shared across future athlete, coach, and event modules."
-        submitLabel="Save Changes"
+        title={t("institutions.editTitle")}
+        subtitle={t("institutions.editSubtitle")}
+        submitLabel={t("institutions.saveChanges")}
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
         isSubmitting={submitting}

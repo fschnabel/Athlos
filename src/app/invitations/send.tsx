@@ -1,4 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+﻿import { zodResolver } from "@hookform/resolvers/zod";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,12 +14,14 @@ import { buildEmailInvitation, getEventById, updateEvent } from "@/features/even
 import { InvitationEmailFormValues, invitationEmailSchema } from "@/features/events/validation";
 import { StatePanel } from "@/features/institutions/components/StatePanel";
 import { institutionService } from "@/features/institutions/services/institutionService";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 import { CompetitionEvent, CreateEventInvitationInput } from "@/types/events";
 import { Institution } from "@/types/institutions";
 
 export default function SendInvitationsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const { t, formatDate } = useI18n();
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
   const [event, setEvent] = useState<CompetitionEvent | null>(null);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
@@ -67,7 +69,7 @@ export default function SendInvitationsScreen() {
   if (loading) {
     return (
       <Screen>
-        <StatePanel title="Loading invitations" message="Preparing event invitation data." loading />
+        <StatePanel title={t("invitations.loadingTitle")} message={t("invitations.loadingMessage")} loading />
       </Screen>
     );
   }
@@ -75,7 +77,7 @@ export default function SendInvitationsScreen() {
   if (!event) {
     return (
       <Screen>
-        <StatePanel title="Event not found" message="We could not find that event for the active institution." />
+        <StatePanel title={t("events.detailNotFoundTitle")} message={t("invitations.eventNotFound")} />
       </Screen>
     );
   }
@@ -123,10 +125,10 @@ export default function SendInvitationsScreen() {
 
   return (
     <Screen>
-      <AppSectionHeader title="Manage Invitations" subtitle={`Event: ${event.name}`} />
+      <AppSectionHeader title={t("invitations.manageTitle")} subtitle={`${t("events.eventLabel")}: ${event.name}`} />
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Registered institutions</Text>
+        <Text style={styles.sectionTitle}>{t("invitations.registeredInstitutions")}</Text>
         <View style={styles.chipWrap}>
           {institutions.map((institution) => (
             <Pressable key={institution.id} onPress={() => void handleAddInstitution(institution)} style={styles.chip}>
@@ -137,24 +139,24 @@ export default function SendInvitationsScreen() {
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Invite by email</Text>
-        <AppTextField control={emailForm.control} name="email" label="Institution email" placeholder="sports@institution.org" autoCapitalize="none" keyboardType="email-address" />
-        <AppButton label="Add email invitation" variant="secondary" onPress={() => void handleAddEmail()} loading={saving} />
+        <Text style={styles.sectionTitle}>{t("events.inviteEmail")}</Text>
+        <AppTextField control={emailForm.control} name="email" label={t("invitations.institutionEmail")} placeholder="sports@institution.org" autoCapitalize="none" keyboardType="email-address" />
+        <AppButton label={t("events.addEmailInvitation")} variant="secondary" onPress={() => void handleAddEmail()} loading={saving} />
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Current invitations</Text>
+        <Text style={styles.sectionTitle}>{t("events.currentInvitations")}</Text>
         <View style={styles.stack}>
           {event.invitations.length > 0 ? (
             event.invitations.map((invitation) => (
               <View key={invitation.id} style={styles.innerCard}>
                 <Text style={styles.cardTitle}>{invitation.institutionName ?? invitation.email}</Text>
-                <Text style={styles.line}>{invitation.recipientType === "registered_institution" ? "Registered institution" : "Email invitation"}</Text>
-                <Text style={styles.line}>Sent: {new Date(invitation.sentAt).toLocaleDateString()}</Text>
+                <Text style={styles.line}>{invitation.recipientType === "registered_institution" ? t("invitations.registeredInstitution") : t("invitations.emailInvitation")}</Text>
+                <Text style={styles.line}>{formatDate(invitation.sentAt)}</Text>
               </View>
             ))
           ) : (
-            <Text style={styles.line}>No invitations yet.</Text>
+            <Text style={styles.line}>{t("invitations.noInvitationsYet")}</Text>
           )}
         </View>
       </AppCard>

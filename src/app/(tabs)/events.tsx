@@ -1,4 +1,4 @@
-import { Link, Redirect, useFocusEffect } from "expo-router";
+﻿import { Link, Redirect, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -9,11 +9,13 @@ import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { listEventsByInstitution } from "@/features/events/service";
 import { StatePanel } from "@/features/institutions/components/StatePanel";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 import { CompetitionEvent } from "@/types/events";
 
 export default function EventsTabScreen() {
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
+  const { t } = useI18n();
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,11 +30,11 @@ export default function EventsTabScreen() {
       setError(null);
       setEvents(await listEventsByInstitution(activeInstitution.id));
     } catch {
-      setError("We could not load events for this institution.");
+      setError(t("common.somethingWentWrong"));
     } finally {
       setLoading(false);
     }
-  }, [activeInstitution]);
+  }, [activeInstitution, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,11 +48,11 @@ export default function EventsTabScreen() {
 
   return (
     <Screen>
-      <AppSectionHeader title="My Events" subtitle={`Events created by ${activeInstitution.name}.`} />
+      <AppSectionHeader title={t("events.title")} subtitle={t("events.subtitle", { institution: activeInstitution.name })} />
 
-      {loading ? <StatePanel title="Loading events" message="Preparing your competition calendar." loading /> : null}
-      {!loading && error ? <StatePanel title="Something went wrong" message={error} /> : null}
-      {!loading && !error && events.length === 0 ? <StatePanel title="No events yet" message="Create your first event with categories, disciplines, and invitations." /> : null}
+      {loading ? <StatePanel title={t("events.loadingTitle")} message={t("events.loadingMessage")} loading /> : null}
+      {!loading && error ? <StatePanel title={t("common.somethingWentWrong")} message={error} /> : null}
+      {!loading && !error && events.length === 0 ? <StatePanel title={t("events.noEventsTitle")} message={t("events.noEventsMessage")} /> : null}
 
       {!loading && !error && events.length > 0 ? (
         <View style={styles.list}>
@@ -58,10 +60,12 @@ export default function EventsTabScreen() {
             <AppCard key={event.id}>
               <Text style={styles.title}>{event.name}</Text>
               <Text style={styles.meta}>{event.venue}</Text>
-              <Text style={styles.meta}>{event.startDate} at {event.startTime}</Text>
-              <Text style={styles.meta}>{event.durationDays} day(s) � {event.categories.length} categories</Text>
+              <Text style={styles.meta}>{event.startDate} {event.startTime}</Text>
+              <Text style={styles.meta}>
+                {event.durationDays} {event.durationDays === 1 ? t("events.daySingular") : t("events.dayPlural")} • {event.categories.length} {t("events.categoriesHeader").toLowerCase()}
+              </Text>
               <Link href={{ pathname: "/events/detail", params: { id: event.id } }} asChild>
-                <AppButton label="Open event" variant="secondary" />
+                <AppButton label={t("events.open")} variant="secondary" />
               </Link>
             </AppCard>
           ))}
@@ -69,7 +73,7 @@ export default function EventsTabScreen() {
       ) : null}
 
       <Link href="/events/create" asChild>
-        <AppButton label="Create event" />
+        <AppButton label={t("events.create")} />
       </Link>
     </Screen>
   );

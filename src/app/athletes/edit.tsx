@@ -1,4 +1,4 @@
-import { Href, Redirect, useLocalSearchParams, useRouter } from "expo-router";
+﻿import { Href, Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
 import { Screen } from "@/components/Screen";
@@ -6,6 +6,7 @@ import { AthleteForm } from "@/features/athletes/components/AthleteForm";
 import { getAthleteById, updateAthlete } from "@/features/athletes/service";
 import { AthleteFormValues } from "@/features/athletes/validation";
 import { StatePanel } from "@/features/institutions/components/StatePanel";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 import { Athlete } from "@/types/domain";
 
@@ -13,6 +14,7 @@ const scanRoute = "/athletes/scan-id" as Href;
 
 export default function EditAthleteScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const { id, firstName, lastName, birthDate, gender } = useLocalSearchParams<{
     id?: string;
     firstName?: string;
@@ -58,7 +60,7 @@ export default function EditAthleteScreen() {
   if (loading) {
     return (
       <Screen>
-        <StatePanel title="Loading athlete" message="Preparing athlete details for editing." loading />
+        <StatePanel title={t("athletes.loadingTitle")} message={t("athletes.loadingMessage")} loading />
       </Screen>
     );
   }
@@ -66,7 +68,7 @@ export default function EditAthleteScreen() {
   if (!athlete) {
     return (
       <Screen>
-        <StatePanel title="Athlete not found" message="This athlete does not belong to the active institution or no longer exists." />
+        <StatePanel title={t("common.somethingWentWrong")} message={t("events.detailNotFoundMessage")} />
       </Screen>
     );
   }
@@ -94,9 +96,9 @@ export default function EditAthleteScreen() {
   return (
     <Screen>
       <AthleteForm
-        title="Edit Athlete"
-        subtitle={`Update ${athlete.firstName} ${athlete.lastName}. Category will be recalculated automatically from age.`}
-        submitLabel="Save changes"
+        title={t("athletes.editTitle")}
+        subtitle={t("athletes.editSubtitle")}
+        submitLabel={t("common.saveChanges")}
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
         onScanIdPress={() =>

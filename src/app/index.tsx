@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { useInstitutionBootstrap } from "@/features/institutions/hooks/useInstitutionBootstrap";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 
 const appHomeRoute = "/(tabs)/dashboard" as Href;
@@ -14,6 +15,7 @@ export default function IndexRoute() {
   const router = useRouter();
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
   const { hasBootstrapped, isBootstrapping } = useInstitutionBootstrap();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!hasBootstrapped || isBootstrapping) {
@@ -27,8 +29,8 @@ export default function IndexRoute() {
     <Screen scrollable={false} contentContainerStyle={styles.container}>
       <View style={styles.panel}>
         <Text style={styles.kicker}>Athlos</Text>
-        <Text style={styles.title}>Preparing your institution workspace</Text>
-        <Text style={styles.subtitle}>We are restoring the last active institution and loading the local MVP data.</Text>
+        <Text style={styles.title}>{t("common.loading")}</Text>
+        <Text style={styles.subtitle}>Loading workspace...</Text>
       </View>
     </Screen>
   );

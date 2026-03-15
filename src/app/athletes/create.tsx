@@ -1,16 +1,18 @@
-import { Href, Redirect, useLocalSearchParams, useRouter } from "expo-router";
+﻿import { Href, Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 
 import { Screen } from "@/components/Screen";
 import { AthleteForm } from "@/features/athletes/components/AthleteForm";
 import { createAthlete } from "@/features/athletes/service";
 import { AthleteFormValues } from "@/features/athletes/validation";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 
 const scanRoute = "/athletes/scan-id" as Href;
 
 export default function CreateAthleteScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const params = useLocalSearchParams<{
     firstName?: string;
     lastName?: string;
@@ -47,9 +49,9 @@ export default function CreateAthleteScreen() {
   return (
     <Screen>
       <AthleteForm
-        title="Create Athlete"
-        subtitle={`Add a new athlete to ${activeInstitution.name}. Category will be assigned automatically from age.`}
-        submitLabel="Save athlete"
+        title={t("athletes.createTitle")}
+        subtitle={t("athletes.createSubtitle", { institution: activeInstitution.name })}
+        submitLabel={t("common.save")}
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
         onScanIdPress={() =>

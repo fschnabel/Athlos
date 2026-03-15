@@ -1,4 +1,4 @@
-import { Href, Redirect, useRouter } from "expo-router";
+﻿import { Href, Redirect, useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import { AppButton } from "@/components/AppButton";
@@ -6,6 +6,7 @@ import { AppSectionHeader } from "@/components/AppSectionHeader";
 import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { InstitutionDetailsCard } from "@/features/institutions/components/InstitutionDetailsCard";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 
 const selectRoute = "/institutions/select" as Href;
@@ -14,6 +15,7 @@ const editRoute = "/institutions/edit" as Href;
 
 export default function InstitutionProfileScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
 
   if (!activeInstitution) {
@@ -23,15 +25,12 @@ export default function InstitutionProfileScreen() {
   return (
     <Screen contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.kicker}>Institution Profile</Text>
-        <AppSectionHeader
-          title={activeInstitution.name}
-          subtitle="Review the profile information currently powering this MVP workspace."
-        />
+        <Text style={styles.kicker}>{t("institutions.profileTitle")}</Text>
+        <AppSectionHeader title={activeInstitution.name} subtitle={t("institutions.profileSubtitle")} />
       </View>
       <InstitutionDetailsCard institution={activeInstitution} />
-      <AppButton label="Edit Institution" onPress={() => router.push(editRoute)} />
-      <AppButton label="Back to Dashboard" variant="ghost" onPress={() => router.replace(dashboardRoute)} />
+      <AppButton label={t("institutions.editInstitution")} onPress={() => router.push(editRoute)} />
+      <AppButton label={t("common.back")} variant="ghost" onPress={() => router.replace(dashboardRoute)} />
     </Screen>
   );
 }

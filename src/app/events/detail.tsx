@@ -1,4 +1,4 @@
-import { Link, Redirect, useLocalSearchParams } from "expo-router";
+﻿import { Link, Redirect, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -9,11 +9,13 @@ import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { getEventById } from "@/features/events/service";
 import { StatePanel } from "@/features/institutions/components/StatePanel";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 import { CompetitionEvent } from "@/types/events";
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const { t, formatDate } = useI18n();
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
   const [event, setEvent] = useState<CompetitionEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export default function EventDetailScreen() {
   if (loading) {
     return (
       <Screen>
-        <StatePanel title="Loading event" message="Preparing event details." loading />
+        <StatePanel title={t("events.detailLoadingTitle")} message={t("events.detailLoadingMessage")} loading />
       </Screen>
     );
   }
@@ -58,53 +60,56 @@ export default function EventDetailScreen() {
   if (!event) {
     return (
       <Screen>
-        <StatePanel title="Event not found" message="This event does not belong to the active institution or no longer exists." />
+        <StatePanel title={t("events.detailNotFoundTitle")} message={t("events.detailNotFoundMessage")} />
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <AppSectionHeader title={event.name} subtitle={event.description || "Competition event overview."} />
+      <AppSectionHeader title={event.name} subtitle={event.description || t("events.overview")} />
 
       <AppCard>
-        <Text style={styles.line}>Venue: {event.venue}</Text>
-        <Text style={styles.line}>Starts: {event.startDate} at {event.startTime}</Text>
-        <Text style={styles.line}>Duration: {event.durationDays} day(s)</Text>
+        <Text style={styles.line}>{t("events.venueLabel")}: {event.venue}</Text>
+        <Text style={styles.line}>{t("events.startsLabel")}: {event.startDate} {event.startTime}</Text>
+        <Text style={styles.line}>
+          {t("events.durationLabel")}: {event.durationDays} {event.durationDays === 1 ? t("events.daySingular") : t("events.dayPlural")}
+        </Text>
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Categories</Text>
+        <Text style={styles.sectionTitle}>{t("events.categoriesHeader")}</Text>
         <View style={styles.stack}>
           {event.categories.map((category) => (
             <View key={category.id} style={styles.innerCard}>
               <Text style={styles.cardTitle}>{category.name}</Text>
-              <Text style={styles.line}>Ages {category.minAge} to {category.maxAge}</Text>
-              <Text style={styles.line}>Disciplines: {category.disciplines.join(", ")}</Text>
+              <Text style={styles.line}>{t("events.agesRange", { min: category.minAge, max: category.maxAge })}</Text>
+              <Text style={styles.line}>{t("events.genderLabel")}: {t(`events.genders.${category.gender}`)}</Text>
+              <Text style={styles.line}>{t("events.disciplinesLabel")}: {category.disciplines.join(", ")}</Text>
             </View>
           ))}
         </View>
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Invitations</Text>
+        <Text style={styles.sectionTitle}>{t("events.invitationsHeader")}</Text>
         <View style={styles.stack}>
           {event.invitations.length > 0 ? (
             event.invitations.map((invitation) => (
               <View key={invitation.id} style={styles.innerCard}>
                 <Text style={styles.cardTitle}>{invitation.institutionName ?? invitation.email}</Text>
-                <Text style={styles.line}>{invitation.recipientType === "registered_institution" ? "Registered institution" : "Email invitation"}</Text>
-                <Text style={styles.line}>Sent: {new Date(invitation.sentAt).toLocaleDateString()}</Text>
+                <Text style={styles.line}>{invitation.recipientType === "registered_institution" ? t("invitations.registeredInstitution") : t("invitations.emailInvitation")}</Text>
+                <Text style={styles.line}>{formatDate(invitation.sentAt)}</Text>
               </View>
             ))
           ) : (
-            <Text style={styles.line}>No invitations were sent for this event yet.</Text>
+            <Text style={styles.line}>{t("events.noInvitationsYet")}</Text>
           )}
         </View>
       </AppCard>
 
       <Link href={{ pathname: "/invitations/send", params: { id: event.id } }} asChild>
-        <AppButton label="Manage invitations" />
+        <AppButton label={t("events.manageInvitations")} />
       </Link>
     </Screen>
   );

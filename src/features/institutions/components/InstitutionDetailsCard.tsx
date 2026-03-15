@@ -1,15 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+﻿import { StyleSheet, Text, View } from "react-native";
 
 import { AppCard } from "@/components/AppCard";
 import { colors, spacing } from "@/constants/theme";
-import { Institution, institutionTypeOptions } from "@/types/institutions";
+import { useI18n } from "@/i18n";
+import { Institution } from "@/types/institutions";
 
 interface InstitutionDetailsCardProps {
   institution: Institution;
 }
-
-const getTypeLabel = (type: Institution["type"]) =>
-  institutionTypeOptions.find((option) => option.value === type)?.label ?? type;
 
 const DetailRow = ({ label, value }: { label: string; value: string }) => (
   <View style={styles.row}>
@@ -18,17 +16,21 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
   </View>
 );
 
-export const InstitutionDetailsCard = ({ institution }: InstitutionDetailsCardProps) => (
-  <AppCard>
-    <DetailRow label="Institution" value={institution.name} />
-    <DetailRow label="Type" value={getTypeLabel(institution.type)} />
-    <DetailRow label="Location" value={`${institution.city}, ${institution.province}`} />
-    <DetailRow label="Email" value={institution.email} />
-    <DetailRow label="Phone" value={institution.phone} />
-    <DetailRow label="Main contact" value={institution.mainContactName} />
-    <DetailRow label="Logo URL" value={institution.logoUrl || "Not provided"} />
-  </AppCard>
-);
+export const InstitutionDetailsCard = ({ institution }: InstitutionDetailsCardProps) => {
+  const { t } = useI18n();
+
+  return (
+    <AppCard>
+      <DetailRow label={t("institutions.details.institution")} value={institution.name} />
+      <DetailRow label={t("institutions.details.type")} value={t(`institutions.types.${institution.type}`)} />
+      <DetailRow label={t("institutions.details.location")} value={`${institution.city}, ${institution.province}`} />
+      <DetailRow label={t("institutions.details.email")} value={institution.email} />
+      <DetailRow label={t("institutions.details.phone")} value={institution.phone} />
+      <DetailRow label={t("institutions.details.mainContact")} value={institution.mainContactName} />
+      <DetailRow label={t("institutions.details.logoUrl")} value={institution.logoUrl || t("common.notProvided")} />
+    </AppCard>
+  );
+};
 
 const styles = StyleSheet.create({
   row: {

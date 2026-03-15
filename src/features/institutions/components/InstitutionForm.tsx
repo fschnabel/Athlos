@@ -1,4 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+﻿import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 
@@ -8,6 +8,7 @@ import { AppSectionHeader } from "@/components/AppSectionHeader";
 import { AppTextField } from "@/components/AppTextField";
 import { spacing } from "@/constants/theme";
 import { InstitutionFormValues, institutionFormSchema } from "@/features/institutions/schemas/institutionSchema";
+import { useI18n } from "@/i18n";
 
 import { InstitutionTypeField } from "./InstitutionTypeField";
 
@@ -28,6 +29,7 @@ export const InstitutionForm = ({
   onSubmit,
   isSubmitting = false,
 }: InstitutionFormProps) => {
+  const { t } = useI18n();
   const { control, handleSubmit } = useForm<InstitutionFormValues>({
     resolver: zodResolver(institutionFormSchema),
     defaultValues,
@@ -37,28 +39,28 @@ export const InstitutionForm = ({
     <View style={styles.container}>
       <AppSectionHeader title={title} subtitle={subtitle} />
       <AppCard>
-        <AppTextField control={control} name="name" label="Institution name" placeholder="Athlos Performance Club" />
+        <AppTextField control={control} name="name" label={t("institutions.form.name")} placeholder="Athlos Performance Club" />
         <InstitutionTypeField control={control} />
-        <AppTextField control={control} name="city" label="City" placeholder="Guayaquil" />
-        <AppTextField control={control} name="province" label="Province" placeholder="Guayas" />
+        <AppTextField control={control} name="city" label={t("institutions.form.city")} placeholder="Guayaquil" />
+        <AppTextField control={control} name="province" label={t("institutions.form.province")} placeholder="Guayas" />
         <AppTextField
           control={control}
           name="email"
-          label="Email"
+          label={t("institutions.form.email")}
           placeholder="admin@institution.org"
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <AppTextField control={control} name="phone" label="Phone" placeholder="+593 99 000 0000" keyboardType="phone-pad" />
-        <AppTextField control={control} name="mainContactName" label="Main contact name" placeholder="Full name" />
+        <AppTextField control={control} name="phone" label={t("institutions.form.phone")} placeholder="+593 99 000 0000" keyboardType="phone-pad" />
+        <AppTextField control={control} name="mainContactName" label={t("institutions.form.mainContactName")} placeholder="Full name" />
         <AppTextField
           control={control}
           name="logoUrl"
-          label="Logo URL"
+          label={t("institutions.form.logoUrl")}
           placeholder="https://example.com/logo.png"
           keyboardType="url"
           autoCapitalize="none"
-          description="Optional for this MVP."
+          description={t("institutions.form.logoUrlDescription")}
         />
         <AppButton label={submitLabel} onPress={handleSubmit((values) => void onSubmit(values))} loading={isSubmitting} />
       </AppCard>

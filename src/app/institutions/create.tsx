@@ -1,10 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Href, useRouter } from "expo-router";
 
 import { Screen } from "@/components/Screen";
 import { InstitutionForm } from "@/features/institutions/components/InstitutionForm";
 import { InstitutionFormValues } from "@/features/institutions/schemas/institutionSchema";
 import { institutionService } from "@/features/institutions/services/institutionService";
+import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 
 const appHomeRoute = "/(tabs)/dashboard" as Href;
@@ -22,6 +23,7 @@ const defaultValues: InstitutionFormValues = {
 
 export default function CreateInstitutionScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const setActiveInstitution = useInstitutionStore((state) => state.setActiveInstitution);
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,9 +42,9 @@ export default function CreateInstitutionScreen() {
   return (
     <Screen>
       <InstitutionForm
-        title="Create Institution"
-        subtitle="Register a school, club, academy, or federation before managing events and athletes."
-        submitLabel="Save Institution"
+        title={t("institutions.createTitle")}
+        subtitle={t("institutions.createSubtitle")}
+        submitLabel={t("institutions.saveInstitution")}
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
         isSubmitting={submitting}
