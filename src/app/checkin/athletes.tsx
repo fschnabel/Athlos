@@ -1,4 +1,4 @@
-﻿import { Redirect, useFocusEffect } from "expo-router";
+import { Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +18,7 @@ import {
 import { StatePanel } from "@/features/institutions/components/StatePanel";
 import { useInstitutionStore } from "@/store/institution-store";
 import { CheckinStatus } from "@/types/domain";
+import { CompetitionEvent } from "@/types/events";
 
 interface CheckinEventSummary {
   eventId: string;
@@ -26,6 +27,7 @@ interface CheckinEventSummary {
   startTime: string;
   venue: string;
   institutionCount: number;
+  status: CompetitionEvent["status"];
 }
 
 interface CheckinInstitutionSummary {
@@ -67,10 +69,12 @@ const getStatusLabel = (status: CheckinStatus) => {
 export default function CheckinAthletesScreen() {
   const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ eventId?: string }>();
+  const requestedEventId = typeof params.eventId === "string" ? params.eventId : undefined;
   const [events, setEvents] = useState<CheckinEventSummary[]>([]);
   const [institutions, setInstitutions] = useState<CheckinInstitutionSummary[]>([]);
   const [athletes, setAthletes] = useState<CheckinAthleteSummary[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(requestedEventId ?? null);
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
   const [selectedAthleteIds, setSelectedAthleteIds] = useState<string[]>([]);
   const [institutionModalVisible, setInstitutionModalVisible] = useState(false);
@@ -86,13 +90,16 @@ export default function CheckinAthletesScreen() {
       setError(null);
       const nextEvents = await listCheckinEventsByInstitution(activeInstitution.id);
       setEvents(nextEvents);
-      setSelectedEventId((current) => (current && nextEvents.some((event) => event.eventId === current) ? current : nextEvents[0]?.eventId ?? null));
+      setSelectedEventId((current) => {
+        const preferred = requestedEventId && nextEvents.some((event) => event.eventId === requestedEventId) ? requestedEventId : current;
+        return preferred && nextEvents.some((event) => event.eventId === preferred) ? preferred : nextEvents[0]?.eventId ?? null;
+      });
     } catch {
       setError("No pudimos cargar los eventos para check-in.");
     } finally {
       setLoading(false);
     }
-  }, [activeInstitution]);
+  }, [activeInstitution, requestedEventId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -136,13 +143,18 @@ export default function CheckinAthletesScreen() {
   }, [selectedEventId, selectedInstitutionId]);
 
   const selectedCount = selectedAthleteIds.length;
-
   const selectedInstitution = useMemo(
     () => institutions.find((institution) => institution.institutionId === selectedInstitutionId) ?? null,
     [institutions, selectedInstitutionId],
   );
+  const selectedEvent = useMemo(() => events.find((event) => event.eventId === selectedEventId) ?? null, [events, selectedEventId]);
+  const isEventInProgress = selectedEvent?.status === "in_progress";
 
   const toggleAthlete = (athleteId: string) => {
+    if (!isEventInProgress) {
+      return;
+    }
+
     setSelectedAthleteIds((current) =>
       current.includes(athleteId) ? current.filter((item) => item !== athleteId) : [...current, athleteId],
     );
@@ -193,11 +205,16 @@ export default function CheckinAthletesScreen() {
                       <Text style={[styles.chipTitle, selected && styles.chipTitleSelected]}>{event.eventName}</Text>
                       <Text style={[styles.chipMeta, selected && styles.chipMetaSelected]}>{event.startDate} {event.startTime}</Text>
                       <Text style={[styles.chipMeta, selected && styles.chipMetaSelected]}>{event.venue}</Text>
+                      <Text style={[styles.chipMeta, selected && styles.chipMetaSelected]}>Estado: {event.status}</Text>
                     </Pressable>
                   );
                 })}
               </View>
             </AppCard>
+
+            {selectedEvent && !isEventInProgress ? (
+              <StatePanel title="Evento no habilitado" message="Primero habilita el evento desde En curso para comenzar el check-in y usar las mangas generadas." />
+            ) : null}
 
             <AppCard>
               <Text style={styles.sectionTitle}>Seleccionar institucion</Text>
@@ -228,10 +245,15 @@ export default function CheckinAthletesScreen() {
               const enabled = athlete.status === "present";
 
               return (
-                <Pressable key={athlete.athleteId} onPress={() => toggleAthlete(athlete.athleteId)} style={[styles.athleteCard, selected && styles.athleteCardSelected]}>
+                <Pressable
+                  key={athlete.athleteId}
+                  onPress={() => toggleAthlete(athlete.athleteId)}
+                  disabled={!isEventInProgress}
+                  style={[styles.athleteCard, selected && styles.athleteCardSelected, !isEventInProgress && styles.athleteCardDisabled]}
+                >
                   <View style={styles.checkboxRow}>
                     <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-                      {selected ? <Text style={styles.checkboxMark}>✓</Text> : null}
+                      {selected ? <Text style={styles.checkboxMark}>?</Text> : null}
                     </View>
                     <View style={styles.athleteInfo}>
                       <Text style={styles.athleteName}>{athlete.athleteName}</Text>
@@ -240,7 +262,13 @@ export default function CheckinAthletesScreen() {
                     </View>
                     <StatusBadge label={getStatusLabel(athlete.status)} tone={getStatusTone(athlete.status)} />
                   </View>
-                  <Text style={styles.helperText}>{enabled ? "Ya esta habilitado para competir." : "Selecciona este atleta para habilitarlo en la competencia."}</Text>
+                  <Text style={styles.helperText}>
+                    {!isEventInProgress
+                      ? "Activa el evento para habilitar atletas."
+                      : enabled
+                        ? "Ya esta habilitado para competir."
+                        : "Selecciona este atleta para habilitarlo en la competencia."}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -248,7 +276,7 @@ export default function CheckinAthletesScreen() {
         ) : null}
       </Screen>
 
-      {selectedInstitutionId ? (
+      {selectedInstitutionId && isEventInProgress ? (
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}> 
           <AppButton
             label={selectedCount > 0 ? `Habilitar seleccionados (${selectedCount})` : "Habilitar seleccionados"}
@@ -285,7 +313,7 @@ export default function CheckinAthletesScreen() {
                       <Text style={[styles.modalItemTitle, selected && styles.modalItemTitleSelected]}>{institution.institutionName}</Text>
                       <Text style={[styles.modalItemMeta, selected && styles.modalItemMetaSelected]}>{institution.athleteCount} atletas registrados</Text>
                     </View>
-                    {selected ? <Text style={styles.modalCheck}>✓</Text> : null}
+                    {selected ? <Text style={styles.modalCheck}>?</Text> : null}
                   </Pressable>
                 );
               })}
@@ -346,6 +374,9 @@ const styles = StyleSheet.create({
   athleteCardSelected: {
     borderColor: colors.accent,
     backgroundColor: colors.accentMuted,
+  },
+  athleteCardDisabled: {
+    opacity: 0.7,
   },
   checkboxRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
   checkbox: {

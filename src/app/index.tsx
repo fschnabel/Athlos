@@ -6,14 +6,11 @@ import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/constants/theme";
 import { useInstitutionBootstrap } from "@/features/institutions/hooks/useInstitutionBootstrap";
 import { useI18n } from "@/i18n";
-import { useInstitutionStore } from "@/store/institution-store";
 
-const appHomeRoute = "/(tabs)/dashboard" as Href;
-const selectRoute = "/institutions/select" as Href;
+const appHomeRoute = "/(tabs)/events" as Href;
 
 export default function IndexRoute() {
   const router = useRouter();
-  const activeInstitution = useInstitutionStore((state) => state.activeInstitution);
   const { hasBootstrapped, isBootstrapping } = useInstitutionBootstrap();
   const { t } = useI18n();
 
@@ -22,8 +19,8 @@ export default function IndexRoute() {
       return;
     }
 
-    router.replace(activeInstitution ? appHomeRoute : selectRoute);
-  }, [activeInstitution, hasBootstrapped, isBootstrapping, router]);
+    router.replace(appHomeRoute);
+  }, [hasBootstrapped, isBootstrapping, router]);
 
   return (
     <Screen scrollable={false} contentContainerStyle={styles.container}>

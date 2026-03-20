@@ -1,15 +1,27 @@
-﻿import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import seedEvents from "@/mocks/events.json";
-import { AcceptInvitationRegistrationInput, CompetitionEvent, CreateEventCategoryInput, CreateEventInput, CreateEventInvitationInput, EventInvitationStatus } from "@/types/events";
+import {
+  AcceptInvitationRegistrationInput,
+  CompetitionEvent,
+  CreateEventCategoryInput,
+  CreateEventInput,
+  CreateEventInvitationInput,
+  EventHeat,
+  EventHeatAssignment,
+  EventInvitationStatus,
+} from "@/types/events";
+import { distributeBalancedGroups } from "@/utils/heatGeneration";
 
 import { EventRepository } from "./EventRepository";
 
-const STORAGE_KEY = "athlos.events.runtime";
+const STORAGE_KEY = "athlos.events.runtime.presentation.v2";
 const rawSeedEvents = Array.isArray(seedEvents) ? seedEvents : [seedEvents];
-const seededEvents = ((rawSeedEvents as unknown) as CompetitionEvent[]).map((event) => ({
+const seededEvents = (rawSeedEvents as CompetitionEvent[]).map((event) => ({
   ...event,
   registrations: event.registrations ?? [],
+  heats: event.heats ?? [],
+  heatAssignments: event.heatAssignments ?? [],
 }));
 
 let runtimeEvents = [...seededEvents];
@@ -20,6 +32,8 @@ const cloneEvent = (event: CompetitionEvent): CompetitionEvent => ({
   categories: event.categories.map((category) => ({ ...category, disciplines: [...category.disciplines] })),
   invitations: event.invitations.map((invitation) => ({ ...invitation })),
   registrations: event.registrations.map((registration) => ({ ...registration })),
+  heats: event.heats.map((heat) => ({ ...heat })),
+  heatAssignments: event.heatAssignments.map((assignment) => ({ ...assignment })),
 });
 
 const sortEvents = (events: CompetitionEvent[]) => [...events].sort((left, right) => `${right.startDate} ${right.startTime}`.localeCompare(`${left.startDate} ${left.startTime}`));
@@ -77,6 +91,62 @@ const mergeInvitation = (eventId: string, input: CreateEventInvitationInput, cur
 
 const createRegistrationId = (eventId: string, athleteId: string, discipline: string) => `registration-${eventId}-${athleteId}-${slugify(discipline)}-${Date.now().toString(36)}`;
 
+const buildHeatsForEvent = (event: CompetitionEvent): { heats: EventHeat[]; heatAssignments: EventHeatAssignment[] } => {
+  const grouped = new Map<string, typeof event.registrations>();
+
+  event.registrations.forEach((registration) => {
+    const key = `${registration.categoryId}::${registration.discipline}`;
+    const current = grouped.get(key) ?? [];
+    current.push(registration);
+    grouped.set(key, current);
+  });
+
+  const heats: EventHeat[] = [];
+  const heatAssignments: EventHeatAssignment[] = [];
+
+  Array.from(grouped.entries()).forEach(([key, registrations]) => {
+    const [categoryId, discipline] = key.split("::");
+    const categoryName = registrations[0]?.categoryName ?? categoryId;
+    const sizes = distributeBalancedGroups(registrations.length, 8);
+    let cursor = 0;
+
+    sizes.forEach((size, index) => {
+      const heatId = `${event.id}-${slugify(categoryName)}-${slugify(discipline)}-heat-${index + 1}`;
+      const heatName = `${discipline} - Manga ${index + 1}`;
+
+      heats.push({
+        id: heatId,
+        eventId: event.id,
+        categoryId,
+        categoryName,
+        discipline,
+        name: heatName,
+        order: index + 1,
+      });
+
+      const slice = registrations.slice(cursor, cursor + size);
+      cursor += size;
+
+      slice.forEach((registration, assignmentIndex) => {
+        heatAssignments.push({
+          id: `${heatId}-assignment-${assignmentIndex + 1}`,
+          eventId: event.id,
+          heatId,
+          registrationId: registration.id,
+          athleteId: registration.athleteId,
+          athleteName: registration.athleteName,
+          institutionId: registration.institutionId,
+          categoryId: registration.categoryId,
+          discipline: registration.discipline,
+          position: assignmentIndex + 1,
+        });
+      });
+    });
+  });
+
+  return { heats, heatAssignments };
+};
+
 const persistRuntimeEvents = async () => {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(runtimeEvents));
 };
@@ -94,6 +164,8 @@ const ensureHydrated = async () => {
       runtimeEvents = parsed.map((event) => ({
         ...event,
         registrations: event.registrations ?? [],
+        heats: event.heats ?? [],
+        heatAssignments: event.heatAssignments ?? [],
       }));
     }
   } catch {
@@ -154,6 +226,8 @@ export class LocalEventRepository implements EventRepository {
       categories: data.categories.map((category) => createCategory(eventId, category)),
       invitations: data.invitations.map((invitation) => createInvitation(eventId, invitation)),
       registrations: [],
+      heats: [],
+      heatAssignments: [],
       createdAt: now,
       updatedAt: now,
     };
@@ -175,6 +249,8 @@ export class LocalEventRepository implements EventRepository {
       categories: data.categories ? data.categories.map((category) => createCategory(eventId, category)) : currentEvent.categories,
       invitations: data.invitations ? data.invitations.map((invitation) => mergeInvitation(eventId, invitation, currentEvent)) : currentEvent.invitations,
       registrations: currentEvent.registrations,
+      heats: currentEvent.heats,
+      heatAssignments: currentEvent.heatAssignments,
       updatedAt: new Date().toISOString(),
     }));
   }
@@ -191,6 +267,10 @@ export class LocalEventRepository implements EventRepository {
 
   async registerInvitationAthletes(eventId: string, invitationId: string, institutionId: string, registrations: AcceptInvitationRegistrationInput[]): Promise<CompetitionEvent> {
     return updateRuntimeEvent(eventId, (currentEvent) => {
+      if (currentEvent.status === "in_progress" || currentEvent.status === "completed") {
+        throw new Error("Event registration is locked.");
+      }
+
       const invitation = currentEvent.invitations.find((item) => item.id === invitationId);
 
       if (!invitation) {
@@ -225,6 +305,20 @@ export class LocalEventRepository implements EventRepository {
         invitations: currentEvent.invitations.map((item) =>
           item.id === invitationId ? { ...item, status: "accepted" as const, respondedAt: new Date().toISOString() } : item,
         ),
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }
+
+  async startEvent(eventId: string): Promise<CompetitionEvent> {
+    return updateRuntimeEvent(eventId, (currentEvent) => {
+      const { heats, heatAssignments } = buildHeatsForEvent(currentEvent);
+
+      return {
+        ...currentEvent,
+        status: "in_progress",
+        heats,
+        heatAssignments,
         updatedAt: new Date().toISOString(),
       };
     });

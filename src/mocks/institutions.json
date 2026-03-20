@@ -22,8 +22,8 @@
     "phone": "+593 99 555 0001",
     "logoUrl": "",
     "mainContactName": "Diego Salazar",
-    "createdAt": "2026-01-22T09:15:00.000Z",
-    "updatedAt": "2026-01-22T09:15:00.000Z"
+    "createdAt": "2026-01-11T14:30:00.000Z",
+    "updatedAt": "2026-01-11T14:30:00.000Z"
   },
   {
     "id": "inst-pacific-runners-club",
@@ -35,7 +35,59 @@
     "phone": "+593 96 404 6789",
     "logoUrl": "",
     "mainContactName": "Andrea Bravo",
-    "createdAt": "2026-02-05T18:20:00.000Z",
-    "updatedAt": "2026-02-05T18:20:00.000Z"
+    "createdAt": "2026-01-12T14:30:00.000Z",
+    "updatedAt": "2026-01-12T14:30:00.000Z"
+  },
+  {
+    "id": "inst-sierra-sprint-club",
+    "name": "Sierra Sprint Club",
+    "type": "club",
+    "city": "Cuenca",
+    "province": "Azuay",
+    "email": "contacto@sierrasprint.ec",
+    "phone": "+593 98 410 1122",
+    "logoUrl": "",
+    "mainContactName": "Fernanda Torres",
+    "createdAt": "2026-01-13T14:30:00.000Z",
+    "updatedAt": "2026-01-13T14:30:00.000Z"
+  },
+  {
+    "id": "inst-amazonas-athletics",
+    "name": "Amazonas Athletics Center",
+    "type": "academy",
+    "city": "Tena",
+    "province": "Napo",
+    "email": "info@amazonasathletics.ec",
+    "phone": "+593 97 520 3344",
+    "logoUrl": "",
+    "mainContactName": "Luis Chango",
+    "createdAt": "2026-01-14T14:30:00.000Z",
+    "updatedAt": "2026-01-14T14:30:00.000Z"
+  },
+  {
+    "id": "inst-andes-high-school",
+    "name": "Andes High Performance School",
+    "type": "school",
+    "city": "Ambato",
+    "province": "Tungurahua",
+    "email": "deportes@andeshp.edu.ec",
+    "phone": "+593 96 630 5566",
+    "logoUrl": "",
+    "mainContactName": "Paola Ortiz",
+    "createdAt": "2026-01-15T14:30:00.000Z",
+    "updatedAt": "2026-01-15T14:30:00.000Z"
+  },
+  {
+    "id": "inst-coastal-federation",
+    "name": "Coastal Youth Athletics Federation",
+    "type": "federation",
+    "city": "Machala",
+    "province": "El Oro",
+    "email": "secretaria@coastalfederation.ec",
+    "phone": "+593 95 740 7788",
+    "logoUrl": "",
+    "mainContactName": "Ruben Espinoza",
+    "createdAt": "2026-01-16T14:30:00.000Z",
+    "updatedAt": "2026-01-16T14:30:00.000Z"
   }
 ]

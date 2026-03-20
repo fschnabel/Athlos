@@ -1,6 +1,6 @@
-﻿import { institutionService } from "@/features/institutions/services/institutionService";
+import { institutionService } from "@/features/institutions/services/institutionService";
 import { listAthletesByInstitution } from "@/features/athletes/service";
-import { CompetitionEvent, CreateEventInput, CreateEventInvitationInput, AcceptInvitationRegistrationInput } from "@/types/events";
+import { AcceptInvitationRegistrationInput, CompetitionEvent, CreateEventInput, CreateEventInvitationInput } from "@/types/events";
 
 import { localEventRepository } from "./repositories/LocalEventRepository";
 
@@ -11,6 +11,7 @@ export const listEventsByInstitution = (institutionId: string): Promise<Competit
 export const getEventById = (eventId: string): Promise<CompetitionEvent | null> => repository.getById(eventId);
 export const createEvent = (institutionId: string, data: CreateEventInput): Promise<CompetitionEvent> => repository.create(institutionId, data);
 export const updateEvent = (eventId: string, data: Partial<CreateEventInput>): Promise<CompetitionEvent> => repository.update(eventId, data);
+export const startEvent = (eventId: string): Promise<CompetitionEvent> => repository.startEvent(eventId);
 
 export const listReceivedInvitationsByInstitution = async (institutionId: string) => {
   const events = await repository.getAll();

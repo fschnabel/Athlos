@@ -15,7 +15,7 @@ import { useInstitutionStore } from "@/store/institution-store";
 import { Institution } from "@/types/institutions";
 
 const createRoute = "/institutions/create" as Href;
-const appHomeRoute = "/(tabs)/dashboard" as Href;
+const appHomeRoute = "/(tabs)/events" as Href;
 
 export default function SelectInstitutionScreen() {
   const router = useRouter();

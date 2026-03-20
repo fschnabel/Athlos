@@ -1,4 +1,4 @@
-﻿export type EventStatus = "draft" | "published";
+export type EventStatus = "draft" | "published" | "in_progress" | "completed";
 export type InvitationRecipientType = "registered_institution" | "email";
 export type EventInvitationStatus = "sent" | "accepted" | "rejected";
 export type EventAthleteRegistrationStatus = "registered";
@@ -39,6 +39,29 @@ export interface EventAthleteRegistration {
   createdAt: string;
 }
 
+export interface EventHeat {
+  id: string;
+  eventId: string;
+  categoryId: string;
+  categoryName: string;
+  discipline: string;
+  name: string;
+  order: number;
+}
+
+export interface EventHeatAssignment {
+  id: string;
+  eventId: string;
+  heatId: string;
+  registrationId: string;
+  athleteId: string;
+  athleteName: string;
+  institutionId: string;
+  categoryId: string;
+  discipline: string;
+  position: number;
+}
+
 export interface CompetitionEvent {
   id: string;
   institutionId: string;
@@ -52,6 +75,8 @@ export interface CompetitionEvent {
   categories: EventCategory[];
   invitations: EventInvitation[];
   registrations: EventAthleteRegistration[];
+  heats: EventHeat[];
+  heatAssignments: EventHeatAssignment[];
   createdAt: string;
   updatedAt: string;
 }

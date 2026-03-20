@@ -1,4 +1,4 @@
-﻿import { institutionService } from "@/features/institutions/services/institutionService";
+import { institutionService } from "@/features/institutions/services/institutionService";
 import { CheckinStatus } from "@/types/domain";
 import { CompetitionEvent } from "@/types/events";
 
@@ -28,6 +28,7 @@ interface CheckinEventSummary {
   startTime: string;
   venue: string;
   institutionCount: number;
+  status: CompetitionEvent["status"];
 }
 
 const runtimeCheckinStatus = new Map<string, CheckinStatus>();
@@ -70,6 +71,7 @@ export const listCheckinEventsByInstitution = async (institutionId: string): Pro
       startTime: event.startTime,
       venue: event.venue,
       institutionCount: dedupe(event.registrations.map((registration) => registration.institutionId)).length,
+      status: event.status,
     }))
     .sort((left, right) => `${right.startDate}${right.startTime}`.localeCompare(`${left.startDate}${left.startTime}`));
 };

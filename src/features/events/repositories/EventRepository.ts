@@ -1,4 +1,4 @@
-﻿import { AcceptInvitationRegistrationInput, CompetitionEvent, CreateEventInput, EventInvitationStatus } from "@/types/events";
+import { AcceptInvitationRegistrationInput, CompetitionEvent, CreateEventInput, EventInvitationStatus } from "@/types/events";
 
 export interface EventRepository {
   getAll(): Promise<CompetitionEvent[]>;
@@ -8,4 +8,5 @@ export interface EventRepository {
   update(eventId: string, data: Partial<CreateEventInput>): Promise<CompetitionEvent>;
   respondToInvitation(eventId: string, invitationId: string, status: EventInvitationStatus): Promise<CompetitionEvent>;
   registerInvitationAthletes(eventId: string, invitationId: string, institutionId: string, registrations: AcceptInvitationRegistrationInput[]): Promise<CompetitionEvent>;
+  startEvent(eventId: string): Promise<CompetitionEvent>;
 }

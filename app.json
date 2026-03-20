@@ -3,7 +3,8 @@
     "name": "Athlos",
     "slug": "athlos",
     "scheme": "athlos",
-    "version": "1.0.1",
+    "version": "1.0.2",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
@@ -14,7 +15,12 @@
       "bundleIdentifier": "com.athlos.institution"
     },
     "android": {
+      "versionCode": 2,
       "package": "com.athlos.institution",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A2054"
+      },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
@@ -22,7 +28,8 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [

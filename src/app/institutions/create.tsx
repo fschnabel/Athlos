@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Href, useRouter } from "expo-router";
 
 import { Screen } from "@/components/Screen";
@@ -8,7 +8,7 @@ import { institutionService } from "@/features/institutions/services/institution
 import { useI18n } from "@/i18n";
 import { useInstitutionStore } from "@/store/institution-store";
 
-const appHomeRoute = "/(tabs)/dashboard" as Href;
+const appHomeRoute = "/(tabs)/events" as Href;
 
 const defaultValues: InstitutionFormValues = {
   name: "",
